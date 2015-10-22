@@ -1,0 +1,730 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- S 预解析DNS列表 -->
+  <link rel="dns-prefetch" href="//static.paipaiimg.com">
+  <!-- E 预解析DNS列表 -->
+
+  <!-- S 引用前端页面片 -->
+  <!--#include virtual="/sinclude/cssi/fd/h5/cx/download/template.shtml" -->
+  <!-- E 引用前端页面片 -->
+
+  <!-- global:css -->
+  <link rel="stylesheet" type="text/css" href="../gb/css/gb.css" combo-use="/gb/css/gb.min.css">
+  <!-- endglobal -->
+
+  <link rel="stylesheet" type="text/css" href="css/template.css" combo-use="/download/css/template.min.css">
+</head>
+<!-- 注：加ontouchstart使css：active生效 -->
+
+<body>
+  <script>
+    var navi = navigator.userAgent.toLowerCase(),
+      Sys = {},
+      s;
+
+    function jump() {
+      (s = navi.match(/android/)) ? Sys.android = 1: 0;
+      if (Sys.android) {
+        return true;
+      }
+    }
+
+    if (jump()) {
+      document.body.setAttribute('class', 'android');
+    }
+  </script>
+
+
+  <div class="mod_container">
+    <audio class="music" id="aud" src="images/vod/h5download_music.mp3" type="audio/mp3" preload="auto"></audio>
+    <div class="mute_btn" id="muteBtn"><span><i></i></span></div>
+
+    <div class="video">
+      <video id="video" width="100" height="100" preload="auto" webkit-playsinline="true">
+        <source src="images/vod/h5download_750x1208.mp4" type="video/mp4">
+        <div class="gif"></div>
+      </video>
+
+      <video id="video_and" width="100" height="100" preload="auto" webkit-playsinline="true" controls="controls" style="display:none;left:100%;">
+        <source src="images/vod/h5download_750x1208_android.mp4" type="video/mp4">
+        <div class="gif"></div>
+      </video>
+
+    </div>
+
+    <div class="replay" id="replayBtn" style="display:none;">再看一次</div>
+    <div class="replay play_btn" id="playBtn" style="display:;">立即播放</div>
+
+    <div class="loading" id="loading" style="display:;">
+      我是加载
+
+      <div class="loading_bar">
+        <div class="bar"></div>
+        <div class="loading_per"><span id="vper">0</span>%</div>
+      </div>
+    </div>
+
+    <div class="mod_loading2" id="modLoading" style="display:none;">
+      <div class="mod_loading2_inner">
+        <i class="mod_loading2_icon"></i> 加载中
+      </div>
+    </div>
+
+    <div class="mod_tips" style="display:none;">提示内容提提示内容提示内容</div>
+  </div>
+
+  <!-- global:js -->
+  <!-- endglobal -->
+
+  <script src="js/template.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script>
+  </script>
+
+
+
+  <script>
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+
+
+  <script>
+    VOD.extend({
+      container: document.querySelector('.mod_container'),
+      videoWrap: document.querySelector('.video'), // 视频容器
+      video: document.getElementById('video'), // 视频
+      andVideo: document.getElementById('video_and'), // 安卓版视频
+      videoRatio: 750 / 1208, // 视频宽高比
+
+      aud: document.getElementById('aud'), // 音频
+
+      loading: document.getElementById('loading'), // 加载
+      loadingClass: 'loading', // 加载模块类名
+      loadedClass: 'loaded', // 已加载类名
+      per: document.getElementById('vper'), // 进度百分比数值
+      bar: document.querySelector('.loading_bar'), // 进度条
+      barClass: 'loading_bar', // 进度条类名
+      barLoadingClass: 'loading_bar_loading', // 进度条出现类名
+
+      muteBtn: document.getElementById('muteBtn'), // 静音按钮
+      muteBtnClass: 'mute_btn', // 静音按钮类名
+      muteBtnOnClass: 'mute_btn_on', // 已静音样式类名
+
+      playBtn: document.getElementById('playBtn'), // 播放按钮
+      replayBtn: document.getElementById('replayBtn'), // 重播按钮
+      replayTime: 27, // 重播按钮出现时间点
+
+      stalled: document.getElementById('stalled'), // 停止加载提示
+      juhua: document.getElementById('modLoading'), // 缓冲未完成菊花
+
+      initAnd: function(and) {
+        var self = this,
+          v = self.video.volume;
+        // 设置静音按钮样式
+        if (!and && v !== 0.0) {
+          self.muteBtn.setAttribute('class', self.muteBtnClass);
+        }
+        if (and) {
+          self.aud.parentNode.removeChild(self.aud);
+          self.muteBtn.parentNode.removeChild(self.muteBtn);
+          self.video.style.display = 'none';
+          self.video = self.andVideo;
+        }
+
+        if (!self.video.networkState) {
+          self.container.setAttribute('class', 'android');
+        }
+      },
+
+      // 视频播放时
+      play: function() {},
+
+      // 视频循环播放设置
+      replay: function(and) {
+        var self = this;
+
+        // 视频末尾循环设置
+        if (self.video.currentTime >= 32.5 && !and) {
+          self.video.currentTime = 29.6;
+        }
+
+        if (self.video.ended && and) {
+          self.video.style.display = 'none';
+        }
+      },
+
+      // 视频暂停时，各终端对应状态不同
+      stalled: function() {},
+
+      // 静音按钮点击事件
+      mute: function() {},
+
+      // 播放按钮点击事件
+      startPlay: function() {},
+
+      // 重播按钮点击事件
+      startReplay: function() {}
+    });
+
+    if (jump()) {
+      VOD.init(1);
+    } else {
+      VOD.init();
+    }
+  </script>
+
+</body>
+
+</html>
